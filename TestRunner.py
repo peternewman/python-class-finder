@@ -33,6 +33,7 @@ def GetTestClasses(module):
     if issubclass(cls, Tests.Base):
       print("Class", cls, "IS a subclass of",Tests.Base)
       pprint(symbol)
-      pprint(cls.__subclasses__())
+      # Python 3 only
+      #pprint(cls.__subclasses__())
       classes.append(cls)
   return classes
