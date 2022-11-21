@@ -26,6 +26,7 @@ def main():
   if len(test_classes) <= 0:
     print('Failed to find any tests to run')
     sys.exit(2)
+  print("="*80)
   for test_name in sorted(c.__name__ for c in test_classes):
     print(test_name)
   sys.exit(0)
