@@ -1,4 +1,5 @@
 from __future__ import print_function
+from pprint import pprint
 import inspect
 import Tests
 
@@ -22,14 +23,16 @@ def GetTestClasses(module):
       continue
     base_classes = [
         Tests.Base,
-        Tests.Subclass1,
-        Tests.Subclass2
+#        Tests.Subclass1,
+#        Tests.Subclass2
     ]
 
     if cls in base_classes:
       print("Class", cls, "in base classes, skipping")
       continue
     if issubclass(cls, Tests.Base):
-      print("Class", cls, "is a subclass")
+      print("Class", cls, "IS a subclass of",Tests.Base)
+      pprint(symbol)
+      pprint(cls.__subclasses__())
       classes.append(cls)
   return classes
