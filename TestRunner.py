@@ -2,7 +2,7 @@ from __future__ import print_function
 from pprint import pprint
 import inspect
 #import pkg1.Tests
-import pkg1.pkg2.Tests
+import pkg1.pkg2.pkg3.Tests
 
 def GetTestClasses(module):
   """Return a list of test classes from a module.
@@ -27,18 +27,19 @@ def GetTestClasses(module):
 #        Tests.Subclass1,
 #        Tests.Subclass2
 #        pkg1.Tests.Base,
-        pkg1.pkg2.Tests.Base,
+#        pkg1.pkg2.Tests.Base,
+        pkg1.pkg2.pkg3.Tests.Base,
     ]
 
     if cls in base_classes:
       print("Class", cls, "in base classes, skipping")
       continue
-    if issubclass(cls, pkg1.pkg2.Tests.Base):
-      print("Class", cls, "IS a subclass of",pkg1.pkg2.Tests.Base)
+    if issubclass(cls, pkg1.pkg2.pkg3.Tests.Base):
+      print("Class", cls, "IS a subclass of",pkg1.pkg2.pkg3.Tests.Base)
       pprint(symbol)
       # Python 3 only
       #pprint(cls.__subclasses__())
       classes.append(cls)
     else:
-      print("Class", cls, "is not a subclass of",pkg1.pkg2.Tests.Base)
+      print("Class", cls, "is not a subclass of",pkg1.pkg2.pkg3.Tests.Base)
   return classes

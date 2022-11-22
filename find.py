@@ -18,14 +18,14 @@
 
 from __future__ import print_function
 #import Tests
-import pkg1.pkg2.Tests
+import pkg1.pkg2.pkg3.Tests
 import TestRunner
 import sys
 
 def main():
   #test_classes = TestRunner.GetTestClasses(Tests)
   #test_classes = TestRunner.GetTestClasses(pkg1.Tests)
-  test_classes = TestRunner.GetTestClasses(pkg1.pkg2.Tests)
+  test_classes = TestRunner.GetTestClasses(pkg1.pkg2.pkg3.Tests)
   if len(test_classes) <= 0:
     print('Failed to find any tests to run')
     sys.exit(2)
