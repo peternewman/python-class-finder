@@ -19,6 +19,7 @@ import datetime
 import inspect
 import logging
 import time
+from pprint import pprint
 from TimingStats import TimingStats
 from ola import PidStore
 from ola.OlaClient import OlaClient, RDMNack
@@ -191,8 +192,12 @@ def GetTestClasses(module):
   """
   classes = []
   for symbol in dir(module):
+    print("Looking at symbol", symbol)
     cls = getattr(module, symbol)
+    clsstr = str(cls)
+    print("Got attr:", clsstr[:80])
     if not inspect.isclass(cls):
+      print("Not a class:")
       continue
     base_classes = [
         ResponderTest.OptionalParameterTestFixture,
@@ -201,9 +206,22 @@ def GetTestClasses(module):
     ]
 
     if cls in base_classes:
+      print("Class", cls, "in base classes, skipping")
       continue
     if issubclass(cls, ResponderTest.TestFixture):
+      print("Class", cls, "IS a subclass of", ResponderTest.TestFixture)
       classes.append(cls)
+    else:
+      print("Class", cls, "is not a subclass of", ResponderTest.TestFixture)
+      pprint(symbol)
+      pprint(cls.__subclasses__())
+      #pprint(TestDefinitions.SetZeroCurve.__subclasses__())
+      #pprint(ola.testing.rdm.TestDefinitions.SetZeroCurve.__subclasses__())
+    if issubclass(cls, ResponderTest.ResponderTestFixture):
+      print("Class", cls, "is a subclass of RTF")
+      classes.append(cls)
+    else:
+      print("Class", cls, "is not a subclass of", ResponderTest.ResponderTestFixture)
   return classes
 
 
