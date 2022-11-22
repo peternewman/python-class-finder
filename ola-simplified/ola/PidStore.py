@@ -26,7 +26,6 @@ import sys
 from google.protobuf import text_format
 from ola import PidStoreLocation
 from ola import Pids_pb2
-from ola.MACAddress import MACAddress
 from ola import RDMConstants
 from ola.UID import UID
 
@@ -533,48 +532,6 @@ class IPV4(IntAtom):
     except socket.error as e:
       raise ArgsValidationError("Can't pack data: %s" % e)
     return super(IntAtom, self).Pack(value)
-
-
-class MACAtom(FixedSizeAtom):
-  """A MAC address."""
-  def __init__(self, name, **kwargs):
-    super(MACAtom, self).__init__(name, 'BBBBBB')
-
-  def Unpack(self, data):
-    format_string = self._FormatString()
-    try:
-      values = struct.unpack(format_string, data)
-    except struct.error as e:
-      raise UnpackException(e)
-    return MACAddress(bytearray([values[0],
-                                 values[1],
-                                 values[2],
-                                 values[3],
-                                 values[4],
-                                 values[5]]))
-
-  def Pack(self, args):
-    mac = None
-    if isinstance(args[0], MACAddress):
-      mac = args[0]
-    else:
-      mac = MACAddress.FromString(args[0])
-
-    if mac is None:
-      raise ArgsValidationError("Invalid MAC Address: %s" % args)
-
-    format_string = self._FormatString()
-    try:
-      data = struct.pack(format_string,
-                         mac.mac_address[0],
-                         mac.mac_address[1],
-                         mac.mac_address[2],
-                         mac.mac_address[3],
-                         mac.mac_address[4],
-                         mac.mac_address[5])
-    except struct.error as e:
-      raise ArgsValidationError("Can't pack data: %s" % e)
-    return data, 1
 
 
 class UIDAtom(FixedSizeAtom):
