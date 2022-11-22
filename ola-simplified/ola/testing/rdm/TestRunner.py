@@ -214,7 +214,7 @@ def GetTestClasses(module):
     else:
       print("Class", cls, "is not a subclass of", ResponderTest.TestFixture)
       pprint(symbol)
-      pprint(cls.__subclasses__())
+      #pprint(cls.__subclasses__())
       #pprint(TestDefinitions.SetZeroCurve.__subclasses__())
       #pprint(ola.testing.rdm.TestDefinitions.SetZeroCurve.__subclasses__())
     if issubclass(cls, ResponderTest.ResponderTestFixture):
