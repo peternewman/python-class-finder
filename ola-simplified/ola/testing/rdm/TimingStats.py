@@ -16,8 +16,6 @@
 # Copyright (C) 2015 Simon Newton
 
 import logging
-import numpy
-from ola.OlaClient import OlaClient
 
 __author__ = 'nomis52@gmail.com (Simon Newton)'
 

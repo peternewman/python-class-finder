@@ -31,13 +31,6 @@ class RDMAPI(object):
   The RDM API provides parameter data serialization & parsing using a PidStore.
   """
 
-  # This maps ola.proto enums to PidStore enums
-  COMMAND_CLASS_DICT = {
-      OlaClient.RDM_DISCOVERY_RESPONSE: PidStore.RDM_DISCOVERY,
-      OlaClient.RDM_GET_RESPONSE: PidStore.RDM_GET,
-      OlaClient.RDM_SET_RESPONSE: PidStore.RDM_SET,
-  }
-
   def __init__(self, client, pid_store, strict_checks=True):
     """Create a new RDM API.
 

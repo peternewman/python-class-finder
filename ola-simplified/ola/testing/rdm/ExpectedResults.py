@@ -36,7 +36,6 @@
 #                         QUEUED_MESSAGE
 
 
-from ola.OlaClient import OlaClient
 from ola.PidStore import RDM_DISCOVERY, RDM_GET, RDM_SET
 
 COMMAND_CLASS_DICT = {

@@ -26,6 +26,7 @@ from ResponderTest import OptionalParameterTestFixture
 from TestCategory import TestCategory
 from ola import PidStore
 from ola import RDMConstants
+from ola.OlaClient import RDMNack
 from ola.RDMConstants import (RDM_MIN_HOSTNAME_LENGTH, RDM_MAX_HOSTNAME_LENGTH,
                               RDM_MAX_DOMAIN_NAME_LENGTH,
                               RDM_MANUFACTURER_PID_MIN,
@@ -34,7 +35,6 @@ from ola.RDMConstants import (RDM_MIN_HOSTNAME_LENGTH, RDM_MAX_HOSTNAME_LENGTH,
                               INTERFACE_HARDWARE_TYPE_ETHERNET,
                               RDM_ZERO_FOOTPRINT_DMX_ADDRESS,
                               RDM_MANUFACTURER_SD_MIN, RDM_MANUFACTURER_SD_MAX)
-from ola.OlaClient import OlaClient, RDMNack
 from ola.PidStore import ROOT_DEVICE
 from ola.UID import UID
 from TestHelpers import ContainsUnprintable

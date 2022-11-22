@@ -21,7 +21,6 @@ import struct
 import sys
 from ola.rpc.StreamRpcChannel import StreamRpcChannel
 from ola.rpc.SimpleRpcController import SimpleRpcController
-from ola import Ola_pb2
 from ola.UID import UID
 
 """The client used to communicate with the Ola Server."""
@@ -117,11 +116,6 @@ class Plugin(object):
 
   def __hash__(self):
     return hash(self._id)
-
-
-# Populate the Plugin class attributes from the protobuf
-for value in Ola_pb2._PLUGINIDS.values:
-  setattr(Plugin, value.name, value.number)
 
 
 class Device(object):
@@ -316,9 +310,6 @@ class Universe(object):
     name: the name of this universe
     merge_mode: the merge mode this universe is using
   """
-
-  LTP = Ola_pb2.LTP
-  HTP = Ola_pb2.HTP
 
   def __init__(self, universe_id, name, merge_mode, input_ports, output_ports):
     self._id = universe_id
@@ -604,80 +595,11 @@ class RDMResponse(object):
   """
 
   RESPONSE_CODES_TO_STRING = {
-      Ola_pb2.RDM_COMPLETED_OK: 'Ok',
-      Ola_pb2.RDM_WAS_BROADCAST: 'Request was broadcast',
-      Ola_pb2.RDM_FAILED_TO_SEND: 'Failed to send request',
-      Ola_pb2.RDM_TIMEOUT: 'Response Timeout',
-      Ola_pb2.RDM_INVALID_RESPONSE: 'Invalid Response',
-      Ola_pb2.RDM_UNKNOWN_UID: 'Unknown UID',
-      Ola_pb2.RDM_CHECKSUM_INCORRECT: 'Incorrect Checksum',
-      Ola_pb2.RDM_TRANSACTION_MISMATCH: 'Transaction number mismatch',
-      Ola_pb2.RDM_SUB_DEVICE_MISMATCH: 'Sub device mismatch',
-      Ola_pb2.RDM_SRC_UID_MISMATCH: 'Source UID in response doesn\'t match',
-      Ola_pb2.RDM_DEST_UID_MISMATCH: (
-          'Destination UID in response doesn\'t match'),
-      Ola_pb2.RDM_WRONG_SUB_START_CODE: 'Incorrect sub start code',
-      Ola_pb2.RDM_PACKET_TOO_SHORT: (
-          'RDM response was smaller than the minimum size'),
-      Ola_pb2.RDM_PACKET_LENGTH_MISMATCH: (
-          'The length field of packet didn\'t match length received'),
-      Ola_pb2.RDM_PARAM_LENGTH_MISMATCH: (
-          'The parameter length exceeds the remaining packet size'),
-      Ola_pb2.RDM_INVALID_COMMAND_CLASS: (
-          'The command class was not one of GET_RESPONSE or SET_RESPONSE'),
-      Ola_pb2.RDM_COMMAND_CLASS_MISMATCH: (
-          'The command class didn\'t match the request'),
-      Ola_pb2.RDM_INVALID_RESPONSE_TYPE: (
-          'The response type was not ACK, ACK_OVERFLOW, ACK_TIMER or NACK'),
-      Ola_pb2.RDM_PLUGIN_DISCOVERY_NOT_SUPPORTED: (
-          'The DISCOVERY Command Class is not supported by this controller'),
-      Ola_pb2.RDM_DUB_RESPONSE: (
-          'Discovery Unique Branch response')
   }
 
   def __init__(self, controller, response):
-    """
-    Create a new RDMResponse object.
+    """Represents a RDM Response."""
 
-    Args:
-      controller: The RpcController
-      response: A RDMResponse proto message.
-    """
-    self._frames = []
-
-    self.status = RequestStatus(controller)
-    if self.status.Succeeded() and response is not None:
-      self._response_code = response.response_code
-      self._response_type = response.response_type
-      self._queued_messages = response.message_count
-      self._transaction_number = response.transaction_number
-      self.sub_device = response.sub_device
-      self.command_class = response.command_class
-      self.pid = response.param_id
-      self.data = response.data
-
-      for frame in response.raw_frame:
-        self._frames.append(RDMFrame(frame))
-
-    # we populate these below if required
-    self._nack_reason = None
-    self._ack_timer = None
-
-    if (self.status.Succeeded() and
-        self._response_code == Ola_pb2.RDM_COMPLETED_OK):
-      # check for ack timer or nack
-      if self._response_type == Ola_pb2.RDM_NACK_REASON:
-        nack_value = self._get_short_from_data(response.data)
-        if nack_value is None:
-          self._response_code = Ola_pb2.RDM_INVALID_RESPONSE
-        else:
-          self._nack_reason = RDMNack.LookupCode(nack_value)
-      elif self._response_type == Ola_pb2.RDM_ACK_TIMER:
-        self._ack_timer = self._get_short_from_data(response.data)
-        if self._ack_timer is None:
-          self._response_code = Ola_pb2.RDM_INVALID_RESPONSE
-
-  @property
   def response_code(self):
     return self._response_code
 
@@ -718,29 +640,8 @@ class RDMResponse(object):
             self.response_code == OlaClient.RDM_COMPLETED_OK and
             self.response_type == OlaClient.RDM_ACK)
 
-  @property
   def ack_timer(self):
     return 100 * self._ack_timer
-
-  def __repr__(self):
-    if self.response_code != Ola_pb2.RDM_COMPLETED_OK:
-      s = 'RDMResponse(error="{error}")'
-      return s.format(error=self.ResponseCodeAsString())
-
-    if self.response_type == OlaClient.RDM_ACK:
-      s = 'RDMResponse(type=ACK, command_class={cmd})'
-      return s.format(cmd=self._command_class())
-    elif self.response_type == OlaClient.RDM_ACK_TIMER:
-      s = 'RDMResponse(type=ACK_TIMER, ack_timer={timer} ms, ' \
-          'command_class={cmd})'
-      return s.format(timer=self.ack_timer,
-                      cmd=self._command_class())
-    elif self.response_type == OlaClient.RDM_NACK_REASON:
-      s = 'RDMResponse(type=NACK, reason="{reason}")'
-      return s.format(reason=self.nack_reason.description)
-    else:
-      s = 'RDMResponse(type="Unknown")'
-      return s
 
   def _get_short_from_data(self, data):
     """Try to unpack the binary data into a short.
@@ -767,7 +668,7 @@ class RDMResponse(object):
       return "UNKNOWN_CC"
 
 
-class OlaClient(Ola_pb2.OlaClientService):
+class OlaClient():
   """The client used to communicate with olad."""
   def __init__(self, our_socket=None, close_callback=None):
     """Create a new client.
@@ -788,7 +689,6 @@ class OlaClient(Ola_pb2.OlaClientService):
         raise OLADNotRunningException('Failed to connect to olad')
 
     self._channel = StreamRpcChannel(self._socket, self, self._SocketClosed)
-    self._stub = Ola_pb2.OlaServerService_Stub(self._channel)
     self._universe_callbacks = {}
 
   def __del__(self):
@@ -828,7 +728,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.PluginListRequest()
     try:
       self._stub.GetPlugins(
           controller, request,
@@ -852,7 +751,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.PluginDescriptionRequest()
     request.plugin_id = plugin_id
     try:
       self._stub.GetPluginDescription(
@@ -862,7 +760,7 @@ class OlaClient(Ola_pb2.OlaClientService):
       raise OLADNotRunningException()
     return True
 
-  def FetchDevices(self, callback, plugin_filter=Plugin.OLA_PLUGIN_ALL):
+  def FetchDevices(self, callback):
     """Fetch a list of devices from the server.
 
     Args:
@@ -877,7 +775,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.DeviceInfoRequest()
     request.plugin_id = plugin_filter
     try:
       self._stub.GetDeviceInfo(
@@ -901,7 +798,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.OptionalUniverseRequest()
     try:
       self._stub.GetUniverseInfo(
           controller, request,
@@ -925,7 +821,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.UniverseRequest()
     request.universe = universe
     try:
       self._stub.GetDmx(controller, request,
@@ -950,7 +845,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.DmxData()
     request.universe = universe
     if sys.version_info >= (3, 2):
       request.data = data.tobytes()
@@ -980,7 +874,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.UniverseNameRequest()
     request.universe = universe
     request.name = name
     try:
@@ -1007,7 +900,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.MergeModeRequest()
     request.universe = universe
     request.merge_mode = merge_mode
     try:
@@ -1041,7 +933,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.RegisterDmxRequest()
     request.universe = universe
     request.action = action
     try:
@@ -1076,7 +967,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.PatchPortRequest()
     request.device_alias = device_alias
     request.port_id = port
     request.action = action
@@ -1106,7 +996,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.DeviceConfigRequest()
     request.device_alias = device_alias
     request.data = request_data
     try:
@@ -1143,7 +1032,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.TimeCode()
     request.type = time_code_type
     request.hours = hours
     request.minutes = minutes
@@ -1174,7 +1062,6 @@ class OlaClient(Ola_pb2.OlaClientService):
     if request.universe in self._universe_callbacks:
       data = array.array('B', request.data)
       self._universe_callbacks[request.universe](data)
-    response = Ola_pb2.Ack()
     callback(response)
     return True
 
@@ -1193,7 +1080,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.UniverseRequest()
     request.universe = universe
     try:
       self._stub.GetUIDs(controller, request,
@@ -1218,7 +1104,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.DiscoveryRequest()
     request.universe = universe
     request.full = full
     try:
@@ -1300,7 +1185,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.RDMDiscoveryRequest()
     request.universe = universe
     request.uid.esta_id = uid.manufacturer_id
     request.uid.device_id = uid.device_id
@@ -1337,7 +1221,6 @@ class OlaClient(Ola_pb2.OlaClientService):
       return False
 
     controller = SimpleRpcController()
-    request = Ola_pb2.OptionalUniverseRequest()
 
     if universe is not None:
       request.universe = universe
@@ -1356,7 +1239,6 @@ class OlaClient(Ola_pb2.OlaClientService):
   def _RDMMessage(self, universe, uid, sub_device, param_id, callback, data,
                   include_frames, set=False):
     controller = SimpleRpcController()
-    request = Ola_pb2.RDMRequest()
     request.universe = universe
     request.uid.esta_id = uid.manufacturer_id
     request.uid.device_id = uid.device_id
@@ -1548,20 +1430,3 @@ class OlaClient(Ola_pb2.OlaClientService):
     callback(RDMResponse(controller, response))
 
 
-# Populate the patch & register actions
-for value in Ola_pb2._PATCHACTION.values:
-  setattr(OlaClient, value.name, value.number)
-for value in Ola_pb2._REGISTERACTION.values:
-  setattr(OlaClient, value.name, value.number)
-
-# populate time code enums
-for value in Ola_pb2._TIMECODETYPE.values:
-  setattr(OlaClient, value.name, value.number)
-
-# populate the RDM response codes & types
-for value in Ola_pb2._RDMRESPONSECODE.values:
-  setattr(OlaClient, value.name, value.number)
-for value in Ola_pb2._RDMRESPONSETYPE.values:
-  setattr(OlaClient, value.name, value.number)
-for value in Ola_pb2._RDMCOMMANDCLASS.values:
-  setattr(OlaClient, value.name, value.number)

@@ -33,7 +33,6 @@ from TestCategory import TestCategory
 from TestState import TestState
 from TimingStats import TimingStats
 from ola import PidStore
-from ola.OlaClient import OlaClient, RDMNack
 
 if sys.version_info >= (3, 0):
   try:
