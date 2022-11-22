@@ -37,7 +37,7 @@
 
 
 from ola.OlaClient import OlaClient
-from ola.PidStore import RDM_DISCOVERY, RDM_GET, RDM_SET, GetStore
+from ola.PidStore import RDM_DISCOVERY, RDM_GET, RDM_SET
 
 COMMAND_CLASS_DICT = {
     RDM_GET: 'Get',
@@ -156,17 +156,7 @@ class QueuedMessageResult(SuccessfulResult):
     return 'It\'s complicated'
 
   def Matches(self, response, unpacked_data):
-    ok = super(QueuedMessageResult, self).Matches(response, unpacked_data)
-
-    if not ok:
-      return False
-
-    pid_store = GetStore()
-    queued_message_pid = pid_store.GetName('QUEUED_MESSAGE')
-
-    return ((response.response_type == OlaClient.RDM_NACK_REASON or
-             response.response_type == OlaClient.RDM_ACK) and
-             response.pid != queued_message_pid.value)
+    pass
 
 
 class NackResult(SuccessfulResult):
